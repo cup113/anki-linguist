@@ -1,0 +1,36 @@
+<script lang="ts" setup>
+import { useRecordStore } from '@/stores/record';
+import { computed } from 'vue';
+import { Separator } from 'reka-ui';
+import DeleteIcon from './Icon/DeleteIcon.vue';
+import TiptapEditor from './TiptapEditor.vue';
+
+
+const props = defineProps<{
+    chunkId: string;
+    additionId: string;
+}>();
+
+const recordStore = useRecordStore();
+
+const addition = computed(() => {
+    return recordStore.find_addition(props.chunkId, props.additionId);
+});
+</script>
+
+<template>
+    <div class="flex text-center justify-center gap-4">
+        <input type="text" class="w-6 h-6 p-0 text-center rounded-xl bg-gray-100 text-sm" v-model="addition.icon">
+        <div class="grow px-2 py-1">
+            <TiptapEditor v-model="addition.front" />
+        </div>
+        <Separator class="bg-gray-300 h-5 w-0.5 mx-2" decorative orientation="vertical">
+        </Separator>
+        <div class="grow px-2 py-1">
+            <TiptapEditor v-model="addition.back" />
+        </div>
+        <button class="btn-primary text-red-700 p-1" @click="recordStore.delete_addition(chunkId, additionId)">
+            <DeleteIcon />
+        </button>
+    </div>
+</template>
