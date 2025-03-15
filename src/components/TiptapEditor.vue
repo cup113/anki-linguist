@@ -29,7 +29,7 @@ const bubbleMenuItems = [
 </script>
 
 <template>
-    <div>
+    <div class="editor">
         <div v-if="editor">
             <bubble-menu :tippy-options="{ duration: 100 }" :editor="editor" class="relative">
                 <toggle-group-root class="flex space-x-2 bg-white rounded shadow-sm p-1">

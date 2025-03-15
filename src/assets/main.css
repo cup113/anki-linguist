@@ -4,4 +4,8 @@
     .btn-primary {
         @apply border border-gray-200 border-solid rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors;
     }
+
+    .editor {
+        font-family: Georgia, 'Times New Roman', '宋体', serif;
+    }
 }

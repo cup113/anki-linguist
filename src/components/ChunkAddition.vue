@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import { Separator } from 'reka-ui';
 import DeleteIcon from './Icon/DeleteIcon.vue';
 import TiptapEditor from './TiptapEditor.vue';
-
+import SimpleChoice from './SimpleChoice.vue';
 
 const props = defineProps<{
     chunkId: string;
@@ -20,7 +20,7 @@ const addition = computed(() => {
 
 <template>
     <div class="flex text-center justify-center gap-4">
-        <input type="text" class="w-6 h-6 p-0 text-center rounded-xl bg-gray-100 text-sm" v-model="addition.icon">
+        <SimpleChoice v-model="addition.icon"></SimpleChoice>
         <div class="grow px-2 py-1">
             <TiptapEditor v-model="addition.front" />
         </div>

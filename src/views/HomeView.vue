@@ -2,15 +2,26 @@
 import ChunkItem from '@/components/ChunkItem.vue';
 import DownloadIcon from '@/components/Icon/DownloadIcon.vue'
 import AddIcon from '@/components/Icon/AddIcon.vue';
-import { } from 'reka-ui';
 import { useRecordStore } from '@/stores/record';
+import { ref } from 'vue';
 
 const recordStore = useRecordStore();
+
+const title = ref("Chunks");
+
+function onKeyUp(event: KeyboardEvent) {
+  if (event.key === "Enter" && event.ctrlKey) {
+    recordStore.add_record();
+  }
+}
 </script>
 
 <template>
   <main class="p-4 flex flex-col gap-4">
-    <section class="flex flex-col gap-2">
+    <section class="text-center">
+      <input type="text" v-model="title" class="text-center text-xl font-bold">
+    </section>
+    <section class="flex flex-col gap-2" @keyup="onKeyUp">
       <ChunkItem v-for="record, index in recordStore.chunkRecords" :key="record.id" :chunk-id="record.id"
         :index="index" />
     </section>
