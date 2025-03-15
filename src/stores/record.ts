@@ -6,6 +6,7 @@ import { useLocalStorage } from "@vueuse/core";
 type HTMLString = string;
 
 type JsonType<T> = T extends Date ? string
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     : T extends Function | undefined | symbol ? never
     : T extends object ? { [K in keyof T]: JsonType<T[K]> } : T;
 
