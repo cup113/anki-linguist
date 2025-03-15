@@ -67,6 +67,8 @@ export class ChunkRecord {
 }
 
 export const useRecordStore = defineStore("record", () => {
+
+    const title = useLocalStorage("AL_title", "Chunks");
     const chunkRecords = useLocalStorage<ChunkRecord[]>("AL_chunkRecords", [
         ChunkRecord.default().withFront("消耗精力").withBack("<b>expend</b> energy"),
         ChunkRecord.default().withFront("……的精华").withBack("the <b>cream/essence</b> of sth"),
@@ -76,6 +78,8 @@ export const useRecordStore = defineStore("record", () => {
             write(value) { return JSON.stringify(value); },
         },
     });
+    const recordStorageIds = useLocalStorage<string[]>("AL_recordStorageIds", []);
+    load_records(title.value, false);
 
     function add_record() {
         chunkRecords.value.push(ChunkRecord.default());
@@ -109,6 +113,32 @@ export const useRecordStore = defineStore("record", () => {
         }
     }
 
+    function save_records() {
+        if (!recordStorageIds.value.includes(title.value)) {
+            recordStorageIds.value.push(title.value);
+        }
+        localStorage.setItem(`AL_records_${title.value}`, export_records());
+    }
+
+    function load_records(_title: string, interactive: boolean = true) {
+        const item = localStorage.getItem(`AL_records_${_title}`);
+        if (item === null) {
+            if (!interactive) {
+                return;
+            }
+            alert("Record not found.");
+        } else {
+            chunkRecords.value.splice(0, chunkRecords.value.length, ...JSON.parse(item).map(ChunkRecord.fromJSON));
+            title.value = _title;
+        }
+    }
+
+    function add_new_records() {
+        save_records();
+        title.value = "New " + nanoid(8);
+        chunkRecords.value.splice(0, chunkRecords.value.length);
+    }
+
     function export_records() {
         return JSON.stringify(chunkRecords.value, undefined, 2)
     }
@@ -121,12 +151,17 @@ export const useRecordStore = defineStore("record", () => {
 
     return {
         chunkRecords,
+        title,
+        recordStorageIds,
         find_record,
         add_record,
         add_addition,
+        save_records,
+        load_records,
         find_addition,
         delete_addition,
         download_export,
         delete_record,
+        add_new_records,
     };
 });

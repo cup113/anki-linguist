@@ -15,7 +15,7 @@ function choose_level(level: string) {
 
 <template>
     <PopoverRoot v-model:open="open">
-        <PopoverTrigger class="w-6 h-6 p-0 text-center rounded-xl bg-gray-100 text-sm">
+        <PopoverTrigger class="w-6 h-6 p-0 text-center rounded-xl bg-gray-100 text-sm font-semibold">
             {{ model }}
         </PopoverTrigger>
         <PopoverPortal>
