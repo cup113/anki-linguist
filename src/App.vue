@@ -10,9 +10,6 @@ import { NavigationMenuRoot, NavigationMenuList, NavigationMenuItem } from 'reka
         <NavigationMenuItem class="text-gray-700 font-semibold">
           <RouterLink to="/">Home</RouterLink>
         </NavigationMenuItem>
-        <NavigationMenuItem class="text-gray-700 font-semibold">
-          <RouterLink to="/about">About</RouterLink>
-        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenuRoot>
   </header>
