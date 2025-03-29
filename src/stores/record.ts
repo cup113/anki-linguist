@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { saveAs } from "file-saver";
 import { nanoid } from "nanoid";
 import { useLocalStorage } from "@vueuse/core";
+import { encode as encode_base64 } from 'js-base64';
 
 type HTMLString = string;
 
@@ -66,102 +67,115 @@ export class ChunkRecord {
     }
 }
 
-export const useRecordStore = defineStore("record", () => {
+export class ChunkDocument {
+    static LATEST_VERSION = 1;
 
-    const title = useLocalStorage("AL_title", "Chunks");
-    const chunkRecords = useLocalStorage<ChunkRecord[]>("AL_chunkRecords", [
-        ChunkRecord.default().withFront("消耗精力").withBack("<b>expend</b> energy"),
-        ChunkRecord.default().withFront("……的精华").withBack("the <b>cream/essence</b> of sth"),
-    ], {
+    public version: number;
+    public title: string;
+    public records: ChunkRecord[];
+    public sections: { abbr: string; full: string }[];
+
+    constructor(title: string, records: ChunkRecord[]) {
+        this.version = ChunkDocument.LATEST_VERSION;
+        this.title = title;
+        this.records = records;
+        this.sections = [];
+    }
+
+    public add_record(): void {
+        this.records.push(ChunkRecord.default());
+    }
+
+    public find_record(id: string): ChunkRecord {
+        return this.records.find((record) => record.id === id) ?? ChunkRecord.default();
+    }
+
+    public delete_record(id: string): boolean {
+        const index = this.records.findIndex((record) => record.id === id);
+        if (index !== -1) {
+            this.records.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
+    public add_addition(id: string): void {
+        this.find_record(id).additions.push(Addition.default());
+    }
+
+    public find_addition(id: string, additionId: string): Addition {
+        return this.find_record(id).additions.find((addition) => addition.id === additionId) ?? Addition.default();
+    }
+
+    public delete_addition(id: string, additionId: string): boolean {
+        const record = this.find_record(id);
+        const index = record.additions.findIndex((addition) => addition.id === additionId);
+        if (index !== -1) {
+            record.additions.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
+    static fromJSON(json: JsonType<ChunkDocument> | JsonType<ChunkRecord[]>): ChunkDocument {
+        if (Array.isArray(json)) {
+            return new ChunkDocument("", json.map(ChunkRecord.fromJSON));
+        }
+        return new ChunkDocument(json.title, json.records.map(ChunkRecord.fromJSON));
+    }
+}
+
+export const useRecordStore = defineStore("record", () => {
+    const chunkDocument = useLocalStorage("AL_chunkDocument", new ChunkDocument("New " + nanoid(8), []), {
         serializer: {
-            read(raw) { return JSON.parse(raw).map(ChunkRecord.fromJSON); },
+            read(raw) { return ChunkDocument.fromJSON(JSON.parse(raw)); },
             write(value) { return JSON.stringify(value); },
         },
     });
     const recordStorageIds = useLocalStorage<string[]>("AL_recordStorageIds", []);
-    load_records(title.value, false);
+    load_document(chunkDocument.value.title, false);
 
-    function add_record() {
-        chunkRecords.value.push(ChunkRecord.default());
+    function get_local_storage_key(title: string) {
+        return `AL_records_${encode_base64(title)}`;
     }
 
-    function find_record(id: string) {
-        return chunkRecords.value.find((record) => record.id === id) ?? ChunkRecord.default();
-    }
-
-    function delete_record(id: string) {
-        const index = chunkRecords.value.findIndex((record) => record.id === id);
-        if (index !== -1) {
-            chunkRecords.value.splice(index, 1);
+    function save_document() {
+        if (!recordStorageIds.value.includes(chunkDocument.value.title)) {
+            recordStorageIds.value.push(chunkDocument.value.title);
         }
+        localStorage.setItem(get_local_storage_key(chunkDocument.value.title), JSON.stringify(chunkDocument.value));
     }
 
-    function add_addition(id: string) {
-        const record = find_record(id);
-        record.additions.push(Addition.default());
-    }
-
-    function find_addition(chunkId: string, additionId: string) {
-        return find_record(chunkId).additions.find((addition) => addition.id === additionId) ?? Addition.default();
-    }
-
-    function delete_addition(chunkId: string, additionId: string) {
-        const record = find_record(chunkId);
-        const index = record.additions.findIndex((addition) => addition.id === additionId);
-        if (index !== -1) {
-            record.additions.splice(index, 1);
-        }
-    }
-
-    function save_records() {
-        if (!recordStorageIds.value.includes(title.value)) {
-            recordStorageIds.value.push(title.value);
-        }
-        localStorage.setItem(`AL_records_${title.value}`, export_records());
-    }
-
-    function load_records(_title: string, interactive: boolean = true) {
-        const item = localStorage.getItem(`AL_records_${_title}`);
+    function load_document(_title: string, interactive: boolean = true) {
+        const item = localStorage.getItem(get_local_storage_key(_title));
         if (item === null) {
             if (!interactive) {
                 return;
             }
             alert("Record not found.");
         } else {
-            chunkRecords.value.splice(0, chunkRecords.value.length, ...JSON.parse(item).map(ChunkRecord.fromJSON));
-            title.value = _title;
+            chunkDocument.value = ChunkDocument.fromJSON(JSON.parse(item));
+            chunkDocument.value.title = _title;
         }
     }
 
-    function add_new_records() {
-        save_records();
-        title.value = "New " + nanoid(8);
-        chunkRecords.value.splice(0, chunkRecords.value.length);
-    }
-
-    function export_records() {
-        return JSON.stringify(chunkRecords.value, undefined, 2)
+    function new_document() {
+        save_document();
+        chunkDocument.value = new ChunkDocument("New " + nanoid(8), []);
     }
 
     function download_export() {
-        const jsonContent = export_records();
+        const jsonContent = JSON.stringify(chunkDocument.value, null, 2);
         const blob = new Blob([jsonContent], { type: "application/json" });
-        saveAs(blob, "AL_records.json");
+        saveAs(blob, "AL_document.json");
     }
 
     return {
-        chunkRecords,
-        title,
+        chunkDocument,
         recordStorageIds,
-        find_record,
-        add_record,
-        add_addition,
-        save_records,
-        load_records,
-        find_addition,
-        delete_addition,
+        save_document,
+        load_document,
         download_export,
-        delete_record,
-        add_new_records,
+        new_document,
     };
 });

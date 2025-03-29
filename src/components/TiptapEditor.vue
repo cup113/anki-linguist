@@ -35,7 +35,7 @@ const bubbleMenuItems = [
                 <toggle-group-root class="flex space-x-2 bg-white rounded shadow-sm p-1">
                     <toggle-group-item v-for="item in bubbleMenuItems" :key="item.name" :value="item.name"
                         @click="editor.chain().focus()[item.command]().run()"
-                        :class="{ 'text-green-700': editor.isActive(item.name) }">
+                        :class="{ 'text-primary-700': editor.isActive(item.name) }">
                         <component :is="item.icon" />
                     </toggle-group-item>
                 </toggle-group-root>

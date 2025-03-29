@@ -22,7 +22,7 @@ function choose_level(level: string) {
             <PopoverContent class="bg-white dark:bg-gray-800 rounded-md shadow-md p-4 w-64">
                 <div class="grid grid-cols-5">
                     <button v-for="level in choices" :key="level" class="btn-primary px-1 py-1 border-0"
-                        :class="{ 'text-green-700': level === model }" @click="choose_level(level)">
+                        :class="{ 'bg-primary-200': level === model }" @click="choose_level(level)">
                         {{ level }}
                     </button>
                 </div>

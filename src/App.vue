@@ -4,10 +4,12 @@ import { NavigationMenuRoot, NavigationMenuList, NavigationMenuItem } from 'reka
 </script>
 
 <template>
-  <header class="p-2 border-b border-b-gray-500">
+  <header class="p-2 border-b border-b-secondary-500 flex items-center justify-center gap-6 py-4">
+    <img src="/favicon.png" height="32" width="32" alt="Favicon">
+    <h1 class="font-bold text-lg">Anki Linguist</h1>
     <NavigationMenuRoot>
-      <NavigationMenuList class="flex gap-8 mx-auto rounded-xl px-4 py-2 justify-center">
-        <NavigationMenuItem class="text-gray-700 font-semibold">
+      <NavigationMenuList class="flex gap-4 mx-auto rounded-xl justify-center">
+        <NavigationMenuItem class="text-gray-700">
           <RouterLink to="/">Home</RouterLink>
         </NavigationMenuItem>
       </NavigationMenuList>

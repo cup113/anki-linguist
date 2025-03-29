@@ -8,24 +8,18 @@ import { PopoverRoot, PopoverTrigger, PopoverPortal, PopoverContent, PopoverArro
 import { useRecordStore } from '@/stores/record';
 
 const recordStore = useRecordStore();
-
-function onKeyUp(event: KeyboardEvent) {
-  if (event.key === "Enter" && event.ctrlKey) {
-    recordStore.add_record();
-  }
-}
 </script>
 
 <template>
   <main class="p-4 flex flex-col gap-4">
     <section class="flex justify-center items-center gap-2">
-      <button class="text-green-700 btn-primary p-1" @click="recordStore.save_records">
+      <button class="text-primary-700 btn-primary p-1" @click="recordStore.save_document">
         <SaveIcon />
       </button>
-      <input type="text" v-model="recordStore.title" class="text-center text-xl font-bold">
+      <input type="text" v-model="recordStore.chunkDocument.title" class="text-center text-xl font-bold">
       <PopoverRoot>
         <PopoverTrigger>
-          <button class="text-green-700 btn-primary p-1">
+          <button class="text-primary-700 btn-primary p-1">
             <MoreIcon />
           </button>
         </PopoverTrigger>
@@ -33,10 +27,10 @@ function onKeyUp(event: KeyboardEvent) {
           <PopoverContent class="bg-white rounded-md shadow-md p-2">
             <div class="grid grid-cols-2 gap-2">
               <button class="btn-primary p-1" v-for="id in recordStore.recordStorageIds" :key="id"
-                @click="recordStore.load_records(id)">
+                @click="recordStore.load_document(id)">
                 {{ id }}
               </button>
-              <button class="btn-primary p-1 text-green-700" @click="recordStore.add_new_records">
+              <button class="btn-primary p-1 text-primary-700" @click="recordStore.new_document">
                 <AddIcon class="mx-auto" />
               </button>
             </div>
@@ -45,15 +39,15 @@ function onKeyUp(event: KeyboardEvent) {
         </PopoverPortal>
       </PopoverRoot>
     </section>
-    <section class="flex flex-col gap-2" @keyup="onKeyUp">
-      <ChunkItem v-for="record, index in recordStore.chunkRecords" :key="record.id" :chunk-id="record.id"
+    <section class="flex flex-col gap-2">
+      <ChunkItem v-for="record, index in recordStore.chunkDocument.records" :key="record.id" :chunk-id="record.id"
         :index="index" />
     </section>
     <section class="flex gap-2 justify-center">
-      <button class="text-green-700 btn-primary p-2" @click="recordStore.add_record">
+      <button class="text-primary-700 btn-primary p-2" @click="recordStore.chunkDocument.add_record">
         <AddIcon></AddIcon>
       </button>
-      <button class="text-green-700 btn-primary p-2" @click="recordStore.download_export">
+      <button class="text-primary-700 btn-primary p-2" @click="recordStore.download_export">
         <DownloadIcon></DownloadIcon>
       </button>
     </section>

@@ -14,7 +14,7 @@ const props = defineProps<{
 const recordStore = useRecordStore();
 
 const addition = computed(() => {
-    return recordStore.find_addition(props.chunkId, props.additionId);
+    return recordStore.chunkDocument.find_addition(props.chunkId, props.additionId);
 });
 </script>
 
@@ -29,7 +29,8 @@ const addition = computed(() => {
         <div class="grow px-2 py-1">
             <TiptapEditor v-model="addition.back" />
         </div>
-        <button class="btn-primary text-red-700 p-1" @click="recordStore.delete_addition(chunkId, additionId)">
+        <button class="btn-primary text-red-700 py-1 px-2"
+            @click="recordStore.chunkDocument.delete_addition(chunkId, additionId)">
             <DeleteIcon />
         </button>
     </div>

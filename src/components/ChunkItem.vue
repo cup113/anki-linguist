@@ -17,7 +17,7 @@ const props = defineProps<{
 const recordStore = useRecordStore();
 
 const chunk = computed(() => {
-    return recordStore.find_record(props.chunkId);
+    return recordStore.chunkDocument.find_record(props.chunkId);
 });
 
 const index = computed(() => {
@@ -38,12 +38,16 @@ const index = computed(() => {
             <div class="grow px-2 py-1">
                 <TiptapEditor v-model="chunk.back" />
             </div>
-            <button class="text-green-700 btn-primary p-1" @click="recordStore.add_addition(chunk.id)">
-                <MoreIcon />
-            </button>
-            <button class="text-red-700 btn-primary p-1" @click="recordStore.delete_record(chunk.id)">
-                <DeleteIcon />
-            </button>
+            <div>
+                <button class="text-primary-700 btn-primary py-1 px-2"
+                    @click="recordStore.chunkDocument.add_addition(chunk.id)">
+                    <MoreIcon />
+                </button>
+                <button class="text-red-700 btn-primary py-1 px-2"
+                    @click="recordStore.chunkDocument.delete_record(chunk.id)">
+                    <DeleteIcon />
+                </button>
+            </div>
         </div>
         <div class="pl-16">
             <ChunkAddition v-for="addition in chunk.additions" :key="addition.id" :chunk-id="chunk.id"
