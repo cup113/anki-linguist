@@ -17,4 +17,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue': ['vue', 'pinia', 'vue-router'],
+          'tiptap': ['@tiptap/vue-3', '@tiptap/starter-kit', '@tiptap/extension-subscript']
+        }
+      }
+    }
+  }
 })
