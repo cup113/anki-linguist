@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
 import { NavigationMenuRoot, NavigationMenuList, NavigationMenuItem } from 'reka-ui';
+import ToastList from './components/ToastList.vue';
 </script>
 
 <template>
@@ -17,6 +18,8 @@ import { NavigationMenuRoot, NavigationMenuList, NavigationMenuItem } from 'reka
   </header>
 
   <RouterView />
+
+  <ToastList />
 
   <footer class="border-t border-t-gray-500 p-2 mt-20">
     <div class="text-center text-gray-500">

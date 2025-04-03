@@ -3,6 +3,7 @@ import { saveAs } from "file-saver";
 import { nanoid } from "nanoid";
 import { useLocalStorage } from "@vueuse/core";
 import { encode as encode_base64 } from 'js-base64';
+import { useToastsStore } from "./toasts";
 
 type HTMLString = string;
 
@@ -67,19 +68,25 @@ export class ChunkRecord {
     }
 }
 
+type Section = { abbr: string, full: string }[];
+type ChunkDocumentV0 = ChunkRecord[];
+type ChunkDocumentV1 = { version: 1, title: string, records: ChunkRecord[], sections: Section[] };
+
 export class ChunkDocument {
-    static LATEST_VERSION = 1;
+    static LATEST_VERSION = 2;
 
     public version: number;
     public title: string;
     public records: ChunkRecord[];
-    public sections: { abbr: string; full: string }[];
+    public sections: Section[];
+    public footer: string;
 
     constructor(title: string, records: ChunkRecord[]) {
         this.version = ChunkDocument.LATEST_VERSION;
         this.title = title;
         this.records = records;
         this.sections = [];
+        this.footer = "";
     }
 
     public add_record(): void {
@@ -117,11 +124,17 @@ export class ChunkDocument {
         return false;
     }
 
-    static fromJSON(json: JsonType<ChunkDocument> | JsonType<ChunkRecord[]>): ChunkDocument {
+    static fromJSON(json: JsonType<ChunkDocument> | JsonType<ChunkDocumentV1> | JsonType<ChunkDocumentV0>): ChunkDocument {
         if (Array.isArray(json)) {
             return new ChunkDocument("", json.map(ChunkRecord.fromJSON));
         }
-        return new ChunkDocument(json.title, json.records.map(ChunkRecord.fromJSON));
+
+        const result = new ChunkDocument(json.title, json.records.map(ChunkRecord.fromJSON));
+        result.sections = json.sections;
+        if (json.version === 2) {
+            result.footer = json.footer;
+        }
+        return result;
     }
 }
 
@@ -144,6 +157,8 @@ export const useRecordStore = defineStore("record", () => {
             recordStorageIds.value.push(chunkDocument.value.title);
         }
         localStorage.setItem(get_local_storage_key(chunkDocument.value.title), JSON.stringify(chunkDocument.value));
+        const toastsStore = useToastsStore();
+        toastsStore.add_toast("文档已保存", `(${new Date().toLocaleTimeString()}) ${chunkDocument.value.title}`);
     }
 
     function load_document(_title: string, interactive: boolean = true) {
@@ -156,6 +171,14 @@ export const useRecordStore = defineStore("record", () => {
         } else {
             chunkDocument.value = ChunkDocument.fromJSON(JSON.parse(item));
             chunkDocument.value.title = _title;
+        }
+    }
+
+    function delete_document(title: string) {
+        localStorage.removeItem(get_local_storage_key(title));
+        const index = recordStorageIds.value.indexOf(title);
+        if (index !== -1) {
+            recordStorageIds.value.splice(index, 1);
         }
     }
 
@@ -175,6 +198,7 @@ export const useRecordStore = defineStore("record", () => {
         recordStorageIds,
         save_document,
         load_document,
+        delete_document,
         download_export,
         new_document,
     };
