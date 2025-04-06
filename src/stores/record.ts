@@ -174,6 +174,15 @@ export const useRecordStore = defineStore("record", () => {
         }
     }
 
+    function import_document(jsonString: string) {
+        const json = JSON.parse(jsonString);
+        const importedDocument = ChunkDocument.fromJSON(json);
+        const newTitle = prompt("请输入文档标题：", importedDocument.title) || importedDocument.title;
+        importedDocument.title = newTitle;
+        chunkDocument.value = importedDocument;
+        save_document();
+    }
+
     function delete_document(title: string) {
         localStorage.removeItem(get_local_storage_key(title));
         const index = recordStorageIds.value.indexOf(title);
@@ -198,6 +207,7 @@ export const useRecordStore = defineStore("record", () => {
         recordStorageIds,
         save_document,
         load_document,
+        import_document,
         delete_document,
         download_export,
         new_document,

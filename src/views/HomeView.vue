@@ -30,6 +30,25 @@ function delete_document(id: string) {
   }
 }
 
+function import_document(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        alert('文件内容格式不正确');
+        return;
+      }
+      recordStore.import_document(result);
+    } catch (error) {
+      alert("导入失败：文件格式不正确。" + String(error));
+    }
+  };
+  reader.readAsText(file);
+}
 </script>
 
 <template>
@@ -53,6 +72,8 @@ function delete_document(id: string) {
                 @click="recordStore.load_document(id)" :class="{ 'font-bold': id === recordStore.chunkDocument.title }">
                 {{ id }}
               </button>
+              <input type="file" accept="application/json" @change="import_document"
+                class="w-48 border border-primary-300 px-2 py-1" />
             </div>
           </PopoverContent>
         </PopoverPortal>
