@@ -71,15 +71,18 @@ export class ChunkRecord {
 type Section = { abbr: string, full: string }[];
 type ChunkDocumentV0 = ChunkRecord[];
 type ChunkDocumentV1 = { version: 1, title: string, records: ChunkRecord[], sections: Section[] };
+type ChunkDocumentV2 = Omit<ChunkDocumentV1, "version"> & { version: 2, footer: string };
+type ImportedChunkDocument = ChunkDocumentV0 | ChunkDocumentV1 | ChunkDocumentV2 | ChunkDocument;
 
 export class ChunkDocument {
-    static LATEST_VERSION = 2;
+    static LATEST_VERSION = 3;
 
     public version: number;
     public title: string;
     public records: ChunkRecord[];
     public sections: Section[];
     public footer: string;
+    public deckType: "one-side" | "two-sides" | "type";
 
     constructor(title: string, records: ChunkRecord[]) {
         this.version = ChunkDocument.LATEST_VERSION;
@@ -87,6 +90,7 @@ export class ChunkDocument {
         this.records = records;
         this.sections = [];
         this.footer = "";
+        this.deckType = "one-side";
     }
 
     public add_record(): void {
@@ -124,15 +128,18 @@ export class ChunkDocument {
         return false;
     }
 
-    static fromJSON(json: JsonType<ChunkDocument> | JsonType<ChunkDocumentV1> | JsonType<ChunkDocumentV0>): ChunkDocument {
+    static fromJSON(json: JsonType<ImportedChunkDocument>): ChunkDocument {
         if (Array.isArray(json)) {
             return new ChunkDocument("", json.map(ChunkRecord.fromJSON));
         }
 
         const result = new ChunkDocument(json.title, json.records.map(ChunkRecord.fromJSON));
         result.sections = json.sections;
-        if (json.version === 2) {
+        if (json.version === 2 || json.version === 3) {
             result.footer = json.footer;
+        }
+        if (json.version === 3) {
+            result.deckType = json.deckType;
         }
         return result;
     }
