@@ -69,6 +69,7 @@ export class ChunkRecord {
 }
 
 type Section = { abbr: string, full: string }[];
+type DeckType = "one-side" | "two-sides" | "type";
 type ChunkDocumentV0 = ChunkRecord[];
 type ChunkDocumentV1 = { version: 1, title: string, records: ChunkRecord[], sections: Section[] };
 type ChunkDocumentV2 = Omit<ChunkDocumentV1, "version"> & { version: 2, footer: string };
@@ -82,7 +83,7 @@ export class ChunkDocument {
     public records: ChunkRecord[];
     public sections: Section[];
     public footer: string;
-    public deckType: "one-side" | "two-sides" | "type";
+    public deckType: DeckType;
 
     constructor(title: string, records: ChunkRecord[]) {
         this.version = ChunkDocument.LATEST_VERSION;
@@ -144,6 +145,12 @@ export class ChunkDocument {
         return result;
     }
 }
+
+export const deckTypes: { value: DeckType, label: string }[] = [
+    { value: "one-side", label: "单面卡片" },
+    { value: "two-sides", label: "双面卡片" },
+    { value: "type", label: "输入卡片" },
+]
 
 export const useRecordStore = defineStore("record", () => {
     const chunkDocument = useLocalStorage("AL_chunkDocument", new ChunkDocument("New " + nanoid(8), []), {

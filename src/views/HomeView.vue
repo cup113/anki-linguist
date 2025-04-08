@@ -10,8 +10,11 @@ import SaveIcon from '@/components/Icon/SaveIcon.vue';
 import DeleteIcon from '@/components/Icon/DeleteIcon.vue';
 
 import TiptapEditor from '@/components/TiptapEditor.vue';
-import { PopoverRoot, PopoverTrigger, PopoverPortal, PopoverContent } from 'reka-ui';
-import { useRecordStore } from '@/stores/record';
+import {
+  PopoverRoot, PopoverTrigger, PopoverPortal, PopoverContent,
+  SelectRoot, SelectTrigger, SelectValue, SelectPortal, SelectContent, SelectViewport, SelectGroup, SelectItem, SelectItemIndicator, SelectItemText,
+} from 'reka-ui';
+import { useRecordStore, deckTypes } from '@/stores/record';
 
 const recordStore = useRecordStore();
 const deleting = ref(false);
@@ -94,6 +97,27 @@ function import_document(event: Event) {
           </PopoverContent>
         </PopoverPortal>
       </PopoverRoot>
+    </section>
+    <section class="flex justify-center">
+      <SelectRoot v-model="recordStore.chunkDocument.deckType" class="w-72">
+        <SelectTrigger class="btn-primary py-1 px-2 text-primary-700 font-bold">
+          卡组类型：
+          <SelectValue placeholder="请选择卡组类型" />
+        </SelectTrigger>
+        <SelectPortal>
+          <SelectContent class="bg-white text-primary-700 rounded-md shadow-md p-2">
+            <SelectViewport>
+              <SelectGroup>
+                <SelectItem v-for="deckType in deckTypes" :value="deckType.value" :key="deckType.value"
+                  class="p-2 hover:bg-secondary-100">
+                  <SelectItemIndicator />
+                  <SelectItemText>{{ deckType.label }}</SelectItemText>
+                </SelectItem>
+              </SelectGroup>
+            </SelectViewport>
+          </SelectContent>
+        </SelectPortal>
+      </SelectRoot>
     </section>
     <section class="flex flex-col gap-2">
       <ChunkItem v-for="record, index in recordStore.chunkDocument.records" :key="record.id" :chunk-id="record.id"
