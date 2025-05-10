@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Editor, EditorContent, BubbleMenu } from '@tiptap/vue-3';
 import { ToggleGroupRoot, ToggleGroupItem } from 'reka-ui';
+import { watch, ref } from 'vue';
 import StarterKit from '@tiptap/starter-kit';
 import Subscript from '@tiptap/extension-subscript';
 
@@ -9,6 +10,17 @@ import FormatItalic from './Icon/FormatItalic.vue';
 import FormatSubscript from './Icon/FormatSubscript.vue';
 
 const modelValue = defineModel<string>();
+const updating = ref(false);
+
+watch(modelValue, () => {
+    if (editor) {
+        if (!updating.value) {
+            editor.commands.setContent(modelValue.value || "");
+        } else {
+            updating.value = false;
+        }
+    }
+});
 
 const editor = new Editor({
     extensions: [
@@ -17,6 +29,7 @@ const editor = new Editor({
     ],
     content: modelValue.value,
     onUpdate: ({ editor }) => {
+        updating.value = true;
         modelValue.value = editor.getHTML();
     },
 });
