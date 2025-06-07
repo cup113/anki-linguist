@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { useLocalStorage } from "@vueuse/core";
 import { encode as encode_base64 } from 'js-base64';
 import { useToastsStore } from "./toasts";
+import dayjs from 'dayjs';
 
 type HTMLString = string;
 
@@ -11,6 +12,10 @@ type JsonType<T> = T extends Date ? string
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     : T extends Function | undefined | symbol ? never
     : T extends object ? { [K in keyof T]: JsonType<T[K]> } : T;
+
+function now(): string {
+    return dayjs().format("YYYY-MM-DD HH:mm:ss");
+}
 
 export class Addition {
     public id: string;
@@ -73,10 +78,11 @@ type DeckType = "one-side" | "two-sides" | "type";
 type ChunkDocumentV0 = ChunkRecord[];
 type ChunkDocumentV1 = { version: 1, title: string, records: ChunkRecord[], sections: Section[] };
 type ChunkDocumentV2 = Omit<ChunkDocumentV1, "version"> & { version: 2, footer: string };
-type ImportedChunkDocument = ChunkDocumentV0 | ChunkDocumentV1 | ChunkDocumentV2 | ChunkDocument;
+type ChunkDocumentV3 = Omit<ChunkDocumentV2, "version"> & { version: 3, deckType: DeckType };
+type ImportedChunkDocument = ChunkDocumentV0 | ChunkDocumentV1 | ChunkDocumentV2 | ChunkDocumentV3 | ChunkDocument;
 
 export class ChunkDocument {
-    static LATEST_VERSION = 3;
+    static LATEST_VERSION = 4;
 
     public version: number;
     public title: string;
@@ -84,6 +90,8 @@ export class ChunkDocument {
     public sections: Section[];
     public footer: string;
     public deckType: DeckType;
+    public createdAt: string;
+    public modifiedAt: string;
 
     constructor(title: string, records: ChunkRecord[]) {
         this.version = ChunkDocument.LATEST_VERSION;
@@ -92,6 +100,8 @@ export class ChunkDocument {
         this.sections = [];
         this.footer = "";
         this.deckType = "one-side";
+        this.createdAt = now();
+        this.modifiedAt = now();
     }
 
     public add_record(): void {
@@ -136,11 +146,15 @@ export class ChunkDocument {
 
         const result = new ChunkDocument(json.title, json.records.map(ChunkRecord.fromJSON));
         result.sections = json.sections;
-        if (json.version === 2 || json.version === 3) {
+        if (json.version === 2 || json.version === 3 || json.version === 4) {
             result.footer = json.footer;
         }
-        if (json.version === 3) {
+        if (json.version === 3 || json.version === 4) {
             result.deckType = json.deckType;
+        }
+        if (json.version === 4) {
+            result.createdAt = json.createdAt;
+            result.modifiedAt = json.modifiedAt;
         }
         return result;
     }
@@ -159,7 +173,7 @@ export const useRecordStore = defineStore("record", () => {
             write(value) { return JSON.stringify(value); },
         },
     });
-    const recordStorageIds = useLocalStorage<string[]>("AL_recordStorageIds", []);
+    const recordStorageTitles = useLocalStorage<string[]>("AL_recordStorageIds", []);
     load_document(chunkDocument.value.title, false);
 
     function get_local_storage_key(title: string) {
@@ -167,24 +181,34 @@ export const useRecordStore = defineStore("record", () => {
     }
 
     function save_document() {
-        if (!recordStorageIds.value.includes(chunkDocument.value.title)) {
-            recordStorageIds.value.push(chunkDocument.value.title);
+        if (!recordStorageTitles.value.includes(chunkDocument.value.title)) {
+            recordStorageTitles.value.push(chunkDocument.value.title);
         }
+        chunkDocument.value.modifiedAt = now();
         localStorage.setItem(get_local_storage_key(chunkDocument.value.title), JSON.stringify(chunkDocument.value));
         const toastsStore = useToastsStore();
-        toastsStore.add_toast("文档已保存", `(${new Date().toLocaleTimeString()}) ${chunkDocument.value.title}`);
+        toastsStore.add_toast("文档已保存", `(${dayjs().format('HH:mm:ss')}) ${chunkDocument.value.title}`);
     }
 
-    function load_document(_title: string, interactive: boolean = true) {
-        const item = localStorage.getItem(get_local_storage_key(_title));
+    function read_document(title: string) {
+        const item = localStorage.getItem(get_local_storage_key(title));
         if (item === null) {
+            return null;
+        } else {
+            return JSON.parse(item);
+        }
+    }
+
+    function load_document(title: string, interactive: boolean = true) {
+        const doc = read_document(title);
+        if (doc === null) {
             if (!interactive) {
                 return;
             }
             alert("Record not found.");
         } else {
-            chunkDocument.value = ChunkDocument.fromJSON(JSON.parse(item));
-            chunkDocument.value.title = _title;
+            chunkDocument.value = ChunkDocument.fromJSON(doc);
+            chunkDocument.value.title = title;
         }
     }
 
@@ -199,9 +223,9 @@ export const useRecordStore = defineStore("record", () => {
 
     function delete_document(title: string) {
         localStorage.removeItem(get_local_storage_key(title));
-        const index = recordStorageIds.value.indexOf(title);
+        const index = recordStorageTitles.value.indexOf(title);
         if (index !== -1) {
-            recordStorageIds.value.splice(index, 1);
+            recordStorageTitles.value.splice(index, 1);
         }
     }
 
@@ -218,8 +242,9 @@ export const useRecordStore = defineStore("record", () => {
 
     return {
         chunkDocument,
-        recordStorageIds,
+        recordStorageTitles,
         save_document,
+        read_document,
         load_document,
         import_document,
         delete_document,

@@ -1,23 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { onKeyStroke } from '@vueuse/core';
 
 import ChunkItem from '@/components/ChunkItem.vue';
 import DownloadIcon from '@/components/Icon/DownloadIcon.vue'
 import AddIcon from '@/components/Icon/AddIcon.vue';
-import ImportIcon from '@/components/Icon/ImportIcon.vue';
 import SaveIcon from '@/components/Icon/SaveIcon.vue';
-import DeleteIcon from '@/components/Icon/DeleteIcon.vue';
 
 import TiptapEditor from '@/components/TiptapEditor.vue';
 import {
-  PopoverRoot, PopoverTrigger, PopoverPortal, PopoverContent,
   SelectRoot, SelectTrigger, SelectValue, SelectPortal, SelectContent, SelectViewport, SelectGroup, SelectItem, SelectItemIndicator, SelectItemText,
 } from 'reka-ui';
 import { useRecordStore, deckTypes } from '@/stores/record';
 
 const recordStore = useRecordStore();
-const deleting = ref(false);
 
 onKeyStroke('s', e => {
   if (e.ctrlKey) {
@@ -25,33 +20,6 @@ onKeyStroke('s', e => {
     recordStore.save_document();
   }
 });
-
-function delete_document(id: string) {
-  if (confirm("确定删除该文档？")) {
-    recordStore.delete_document(id);
-    deleting.value = false;
-  }
-}
-
-function import_document(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const result = reader.result;
-      if (typeof result !== 'string') {
-        alert('文件内容格式不正确');
-        return;
-      }
-      recordStore.import_document(result);
-    } catch (error) {
-      alert("导入失败：文件格式不正确。" + String(error));
-    }
-  };
-  reader.readAsText(file);
-}
 </script>
 
 <template>
@@ -60,43 +28,10 @@ function import_document(event: Event) {
       <button class="btn-primary p-1 text-primary-700" @click="recordStore.new_document">
         <AddIcon />
       </button>
+      <input type="text" v-model="recordStore.chunkDocument.title" class="text-center text-xl font-bold w-72">
       <button class="text-primary-700 btn-primary p-1" @click="recordStore.save_document">
         <SaveIcon />
       </button>
-      <input type="text" v-model="recordStore.chunkDocument.title" class="text-center text-xl font-bold w-72">
-      <PopoverRoot>
-        <PopoverTrigger class="btn-primary p-1 text-primary-700">
-          <ImportIcon />
-        </PopoverTrigger>
-        <PopoverPortal>
-          <PopoverContent class="bg-white rounded-md shadow-md p-2">
-            <div class="grid grid-cols-2 gap-2">
-              <button v-for="id in recordStore.recordStorageIds" :key="id" class="btn-primary px-2 py-1"
-                @click="recordStore.load_document(id)" :class="{ 'font-bold': id === recordStore.chunkDocument.title }">
-                {{ id }}
-              </button>
-              <input type="file" accept="application/json" @change="import_document"
-                class="w-48 border border-primary-300 px-2 py-1" />
-            </div>
-          </PopoverContent>
-        </PopoverPortal>
-      </PopoverRoot>
-
-      <PopoverRoot :open="deleting" @update:open="deleting = !deleting">
-        <PopoverTrigger class="btn-primary p-1 text-red-700">
-          <DeleteIcon />
-        </PopoverTrigger>
-        <PopoverPortal>
-          <PopoverContent class="bg-white text-red-700 rounded-md shadow-md p-2">
-            <div class="grid grid-cols-2 gap-2">
-              <button v-for="id in recordStore.recordStorageIds" :key="id" class="btn-primary px-2 py-1"
-                @click="delete_document(id);">
-                {{ id }}
-              </button>
-            </div>
-          </PopoverContent>
-        </PopoverPortal>
-      </PopoverRoot>
     </section>
     <section class="flex justify-center">
       <SelectRoot v-model="recordStore.chunkDocument.deckType" class="w-72">
